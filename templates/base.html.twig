@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>{% block title %}Welcome!{% endblock %}</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
+        {% block stylesheets %}
+        {% endblock %}
+
+        {% block javascripts %}
+            {% block importmap %}{{ importmap('app') }}{% endblock %}
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const form = document.getElementById('weather-form');
+
+                    form.addEventListener('submit', async function (e) {
+                        e.preventDefault();
+
+                        const city = form.city.value;
+
+                        try {
+                            const response = await fetch('{{ path('weather_get') }}?city=' + encodeURIComponent(city));
+
+                            if (!response.ok) {
+                                throw new Error('Error: ' + response.status);
+                            }
+
+                            const data = await response.json();
+
+                            console.log(data)
+
+                            document.getElementById('result').innerHTML = `
+                                <h3>Current weather in ${data.city}, ${data.country}:</h3>
+                                <p>Temperature: ${data.temperature}°C</p>
+                                <p>Condition: ${data.condition}</p>
+                                <p>Humidity: ${data.humidity}%</p>
+                                <p>Wind speed: ${data.wind_speed} kph</p>
+                                <p>Last updated: ${data.last_updated}</p>
+                            `;
+                        } catch (error) {
+                            document.getElementById('result').innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+                        }
+                    });
+                });
+            </script>
+        {% endblock %}
+    </head>
+    <body>
+        {% block body %}
+            <form action="{{ path('weather_get') }}" method="get" id="weather-form">
+                <label> Enter a city name to get a weather forecast:</label>
+                <input type="text" name="city"/>
+                <button type="submit">Go!</button>
+            </form>
+
+            <div id="result"></div>
+        {% endblock %}
+    </body>
+</html>
